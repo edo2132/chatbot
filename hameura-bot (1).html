@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>המאורה בוט</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-top: 50px;
+            color: #fff;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+            font-family: 'Helvetica', sans-serif;
+            font-weight: bold;
+            letter-spacing: 5px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            height: 500px;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #333;
+            text-align: right;
+            min-height: 100px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        #user-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>המאורה בוט</h1>
+
+    <div class="container">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="שאל שאלה..." onkeydown="if(event.key === 'Enter'){sendMessage()}">
+        <button onclick="sendMessage()">שלח</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+
+        // הפקודות השונות של הבוט
+        const teamRanks = {
+            "קוסטא": "[Owner]",
+            "kosta": "[Owner]",
+            "נוניקס": "[Admin]",
+            "nunnix": "[Admin]",
+            "ליעד": "[Admin]",
+            "liad": "[Admin]",
+            "מריו": "[Head Mod]",
+            "mario": "[Head Mod]",
+            "תומר": "[Developer] + [Builder]",
+            "tomer": "[Developer] + [Builder]",
+            "אלמוג": "[Developer]",
+            "almog": "[Developer]",
+            "אליה": "[Developer]",
+            "eliya": "[Developer]",
+            "עידו עמרם": "[Moderator]",
+            "edo amram": "[Moderator]",
+            "אורי": "[Moderator]",
+            "ori": "[Moderator]",
+            "פלג": "[Moderator]",
+            "peleg": "[Moderator]",
+            "זום": "[Helper]",
+            "zoom": "[Helper]",
+            "עידו": "[Builder]",
+            "ido": "[Builder]"
+        };
+
+        const responses = {
+            "ip": "הIP של השרת שלנו הוא <a href='http://hameura.net' target='_blank'>hameura.net</a> והגרסא היא 1.20.4 השרת שלנו הוא לפרוץ ולמקורי **לא לבדרוק**",
+            "חנות": "הנה הקישור לקניית דרגות בשרת שלנו! <a href='https://hameuraserver.craftingstore.net/category/461187' target='_blank'>https://hameuraserver.craftingstore.net/category/461187</a>",
+            "חוקים": `🛑 **חוקים לשרת Minecraft:**
+                1. ❌ **אסור להספים:** אסור להספים הודעות.<br>
+                2. ❌ **אסור לפרסם:** אסור לפרסם שרתים אחרים או תוכן בשרת.<br>
+                3. ❌ **אסור לקלל:** אסור לקלל או להתנהג באופן מגונה כלפי אחרים.<br>
+                4. ❌ **אסור להטריל:** אסור להטריל אחרים.<br>
+                5. ❌ **אסור לבקש גישות:** אסור לבקש גישות או להתחפש לצוות.<br>
+                6. ✨ **כבדו את כל השחקנים:** כבדו את כל השחקנים בשרת.<br>
+                7. 📜 **נדרש לעשות מה שהצוות אומר:** יש להקשיב להנחיות הצוות ולעמוד בחוקי השרת.<br>
+                8. ❌ **אסור להשתמש במודים/האקים/אקס ריי:** אסור להשתמש במודים, האקים או ב-X-Ray.<br>
+                🛠️ **חוקים לצוות:**
+                1. 🕵️‍♂️ **תהיו אחראיים:** התנהגו באחריות ואל תנצלו גישות.<br>
+                2. ✨ **תכבדו את השחקנים:** כבדו את כל השחקנים בשרת.<br>
+                **הערה חשובה:** אם תשימו סיסמה קלה כמו "12345" או תשתמשו בשם המשתמש שלכם כסיסמה, הצוות לא יהיה אחראי אם יגנבו לכם פריטים.`,
+            "דיסקורד": "הנה הדיסקורד שלנו: <a href='https://discord.gg/6D6gxcqm' target='_blank'>https://discord.gg/6D6gxcqm</a>",
+            "טיקטוק": "הנה קישורי הטיקטוק שלנו:\n1. <a href='https://www.tiktok.com/@hameuraserver' target='_blank'>https://www.tiktok.com/@hameuraserver</a>\n2. <a href='https://www.tiktok.com/@hameura' target='_blank'>https://www.tiktok.com/@hameura</a> (טיקטוק)",
+            "תודה": "בכיף אם אתה צריך עוד משהו אני פה !",
+            "עזרה": "אני כאן כדי לעזור! הנה מה שאני יכול לעשות:\n1. **ip** - לשאול אותי על ה-IP של השרת.\n<br>2. **חנות** - לשאול על חוקים בשרת.\n<br>3. **חוקים** - לשאול על חוקים בשרת.\n<br>4. **דיסקורד** - לשאול על דיסקורד.\n<br>5. **טיקטוק** - לשאול על טיקטוק.\n<br>6. **תודה** - לקבל הודעה נחמדה.\n<br>7. **טופס** - לשלוח קישור לטופס צוות.\n<br>8. **צוות** - לקבל את רשימת הצוות.",
+            "צוות": "הנה רשימת הצוות שלנו: <br> קוסטא (kosta) - [Owner] <br> נוניקס (nunnix) - [Admin] <br> ליעד (liad) - [Admin] <br> מריו (mario) - [Head Mod] <br> תומר (tomer) - [Developer] + [Builder] <br> אלמוג (almog) - [Developer] <br> אליה (eliya) - [Developer] <br> עידו עמרם (edo amram) - [Moderator] <br> אורי (ori) - [Moderator] <br> פלג (peleg) - [Moderator] <br> זום (zoom) - [Helper] <br> עידו (ido) - [Builder]",
+            "טופס": "הנה הקישור לטופס צוות: <a href='https://docs.google.com/forms/d/e/1FAIpQLScTIQVHOmcXS7OYtB_4VHCvvQQR02uE-QQ66SunzW5PHknbpQ/viewform' target='_blank'>https://docs.google.com/forms/d/e/1FAIpQLScTIQVHOmcXS7OYtB_4VHCvvQQR02uE-QQ66SunzW5PHknbpQ/viewform</a>"
+        };
+
+        // רשימת קללות
+        const badWords = [
+            "חרא", "זין", "אומו", "סונאקי", "דפוק", "מאמי", "כוס", "זונה", "טמבל", "מטומטם", "פוץ", "אידיוט", "הומו", "אמא שלך", "נבלה",
+            "ילד קטן", "פרצוף של טפשה", "פאק", "טינופת", "חלאה", "מעפאן", "שחט", "שובב", "פיטום", "שפוט", "פוליטר", "סרטן", "מגעיל",
+            "תרנגול", "בן זונה", "קרנבל", "שפלא", "בני זונה", "אחר", "גזעני", "כוסית", "לגז", "היתרו", "חיית מין", "מקולקל", "עגל",
+            "קקה", "חתיכת אכזבה", "זבל", "בהמה", "סנאית", "רשום בפיקדון", "חסר רגישות", "משוגע", "אהבל", "צואתיים"
+        ];
+
+        let isUserTimeout = false;
+
+        // הודעות רנדומליות שיכתבו כשמישהו יכנס
+        const randomWelcomeMessages = [
+            "שלום וברוך הבא! איך אפשר לעזור לך?",
+            "היי! אני כאן כדי לעזור, מה אפשר לעשות עבורך?",
+            "היי! אני המאורה בוט, איך אני יכול לעזור לך היום?",
+            "ברוך הבא! איך אפשר לעזור לך היום?",
+            "שלום! אני כאן לשירותך, איך אפשר לעזור?"
+        ];
+
+        // הוצאת הודעה רנדומלית ברגע שהמשתמש נכנס
+        chatBox.innerHTML += `<p><strong>אני:</strong> ${randomWelcomeMessages[Math.floor(Math.random() * randomWelcomeMessages.length)]}</p>`;
+
+        const greetings = ["היי", "שלום", "מה קורה", "מה שלומך", "מה נשמע", "היי בוט"];
+
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            if (!userInput) return;
+
+            if (isUserTimeout) {
+                chatBox.innerHTML += `<p><strong>אני:</strong> אתה בטיימאוט כרגע, לא תוכל לשלוח הודעות במשך דקה.</p>`;
+                document.getElementById("user-input").value = '';
+                return;
+            }
+
+            // בדיקה אם יש קללה בהודעה
+            for (let word of badWords) {
+                if (userInput.toLowerCase().includes(word)) {
+                    chatBox.innerHTML += `<p><strong>אני:</strong> זהו, אתה בטיימאוט לדקה, כי השתמשת בשפה גסה!</p>`;
+                    isUserTimeout = true;
+                    setTimeout(() => {
+                        isUserTimeout = false;
+                    }, 60000); // 60,000 מילישניות = 1 דקה
+                    document.getElementById("user-input").value = '';
+                    return;
+                }
+            }
+
+            chatBox.innerHTML += `<p><strong>אתה:</strong> ${userInput}</p>`;
+
+            let response = null;
+
+            // חיפוש פקודות לפי מילים בהודעה
+            for (let cmd in responses) {
+                if (userInput.toLowerCase().includes(cmd)) {
+                    response = responses[cmd];
+                    break;
+                }
+            }
+
+            // אם לא נמצא פקודה מהמערך responses, בודק אם זה ברכה או דיס
+            if (!response) {
+                for (let greeting of greetings) {
+                    if (userInput.toLowerCase().includes(greeting.toLowerCase())) {
+                        response = "היי! איך אני יכול לעזור לך היום?";
+                        break;
+                    }
+                }
+            }
+
+            // אם המשתמש כותב "דיס" התשובה תהיה כמו דיסקורד
+            if (!response && userInput.toLowerCase().includes("דיס")) {
+                response = "הנה הדיסקורד שלנו: <a href='https://discord.gg/6D6gxcqm' target='_blank'>https://discord.gg/6D6gxcqm</a>";
+            }
+
+            // אם המשתמש כותב "טופס"
+            if (!response && userInput.toLowerCase().includes("טופס")) {
+                response = "הנה הקישור לטופס צוות: <a href='https://docs.google.com/forms/d/e/1FAIpQLScTIQVHOmcXS7OYtB_4VHCvvQQR02uE-QQ66SunzW5PHknbpQ/viewform' target='_blank'>https://docs.google.com/forms/d/e/1FAIpQLScTIQVHOmcXS7OYtB_4VHCvvQQR02uE-QQ66SunzW5PHknbpQ/viewform</a>";
+            }
+
+            if (!response) {
+                response = "לא הבנתי את השאלה, נסה שנית או פתח טיקט בדיסקורד שלנו: <a href='https://discord.gg/6D6gxcqm' target='_blank'>לחץ כאן</a>";
+            }
+
+            chatBox.innerHTML += `<p><strong>אני:</strong> ${response}</p>`;
+
+            // דחיפה למטה של הצ'אט
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            document.getElementById("user-input").value = "";
+
+        }
+    </script>
+</body>
+</html>
